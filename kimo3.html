@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>أدراج — DESIGN Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&family=Tajawal:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d0a;
+            --panel: rgba(16, 20, 15, 0.92);
+            --accent: #12a37e;
+            --accent-dim: rgba(18, 163, 126, 0.16);
+            --border: rgba(230, 238, 230, 0.12);
+            --text: #eef2ee;
+            --muted: #8b968a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1,h2,h3,.brand,.opt-btn,.tab-btn,.price,.val,.label{ font-family: 'Cairo', sans-serif; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            height: 56px;
+            padding: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.85);
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
+        }
+
+        .brand-wrap { display:flex; align-items:center; gap:12px; }
+        .back-link { color: var(--muted); text-decoration:none; font-size:13px; display:flex; align-items:center; gap:6px; }
+        .back-link svg{ width:14px; height:14px; }
+        .brand { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing:.02em; }
+        .code-tag { font-size:11px; color: var(--accent); font-weight:700; letter-spacing:.05em; display:block; margin-top:1px; }
+        .price { background: var(--accent-dim); padding: 4px 12px; border-radius: 16px; color: var(--accent); font-weight: 700; border: 1px solid rgba(18, 163, 126, 0.35); }
+
+        #canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+        }
+
+        .controls-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: none;
+            width: 94%;
+            max-width: 550px;
+            backdrop-filter: blur(12px);
+        }
+
+        .panel.active { display: block; }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .row::-webkit-scrollbar { display: none; }
+
+        .opt-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .opt-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #06120d;
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+        .slider-group { display:flex; flex-direction:column; gap:16px; }
+        .slider-item { display:flex; align-items:center; gap:12px; }
+        .slider-item .label { font-size:13px; color: var(--muted); min-width:90px; font-weight:600; }
+        .slider-item .val { font-size:13px; color: var(--accent); font-weight:700; min-width:56px; text-align:left; }
+        input[type="range"]{ flex:1; height:4px; border-radius:2px; background:var(--border); outline:none; accent-color: var(--accent); -webkit-appearance:none; }
+        input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; box-shadow:0 0 0 3px rgba(18,163,126,.2); }
+
+        .nav-tabs {
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid var(--border);
+            width: 100%;
+            display: flex;
+            padding: 6px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 80px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            padding: 10px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active { color: var(--accent); background: rgba(255, 255, 255, 0.06); border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="brand-wrap">
+            <a href="index.html" class="back-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+                الكتالوج
+            </a>
+            <div>
+                <div class="brand">أدراج</div>
+                <span class="code-tag">DR—01</span>
+            </div>
+        </div>
+        <div class="price" id="price-tag">$280</div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="controls-area">
+        <!-- 0. الأبعاد -->
+        <div class="panel active" id="p-size">
+            <div class="slider-group">
+                <div class="slider-item">
+                    <span class="label">العرض</span>
+                    <input type="range" id="inp-width" min="50" max="140" step="5" value="90" oninput="updateDimensions()">
+                    <span class="val" id="txt-width">90 سم</span>
+                </div>
+                <div class="slider-item">
+                    <span class="label">الارتفاع</span>
+                    <input type="range" id="inp-height" min="60" max="150" step="1" value="81" oninput="updateDimensions()">
+                    <span class="val" id="txt-height">81 سم</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. عدد الأدراج -->
+        <div class="panel" id="p-drawers">
+            <div class="row">
+                <button class="opt-btn active" onclick="setDrawerCount(3, this)">3 أدراج</button>
+                <button class="opt-btn" onclick="setDrawerCount(4, this)">4 أدراج</button>
+                <button class="opt-btn" onclick="setDrawerCount(5, this)">5 أدراج</button>
+            </div>
+        </div>
+
+        <!-- 2. تشكيلات الواجهة -->
+        <div class="panel" id="p-style">
+            <div class="row">
+                <button class="opt-btn active" onclick="setDrawerStyle('flat', this)">مودرن مسطح</button>
+                <button class="opt-btn" onclick="setDrawerStyle('framed', this)">إطار كلاسيك</button>
+                <button class="opt-btn" onclick="setDrawerStyle('slatted', this)">شرائح خشبية</button>
+            </div>
+        </div>
+
+        <!-- 3. خامات وألوان الخشب -->
+        <div class="panel" id="p-wood">
+            <div class="row">
+                <button class="opt-btn active" onclick="setWoodColor(0x8d5b4c, 0.5, this)"><span class="dot" style="background:#8d5b4c"></span> خشب جوز</button>
+                <button class="opt-btn" onclick="setWoodColor(0xd4b996, 0.6, this)"><span class="dot" style="background:#d4b996"></span> خشب بلوط فاتح</button>
+                <button class="opt-btn" onclick="setWoodColor(0x1e293b, 0.4, this)"><span class="dot" style="background:#1e293b"></span> أسود مودرن</button>
+                <button class="opt-btn" onclick="setWoodColor(0xf8fafc, 0.3, this)"><span class="dot" style="background:#f8fafc"></span> أبيض مطفي</button>
+            </div>
+        </div>
+
+        <!-- 4. المقابض والأرجل -->
+        <div class="panel" id="p-hardware">
+            <div class="row" style="margin-bottom: 8px;">
+                <button class="opt-btn active" onclick="setHandleType('bar', this)">مقابض طولية</button>
+                <button class="opt-btn" onclick="setHandleType('knob', this)">مقابض دائرية</button>
+                <button class="opt-btn" onclick="setHandleType('none', this)">بدون مقابض (Push)</button>
+            </div>
+            <div class="row">
+                <button class="opt-btn active" onclick="setHardwareFinish(0xf59e0b, 0.2, 0.9, this)">ذهبي فاخر</button>
+                <button class="opt-btn" onclick="setHardwareFinish(0xe2e8f0, 0.1, 0.95, this)">كروم فضي</button>
+                <button class="opt-btn" onclick="setHardwareFinish(0x18181b, 0.6, 0.2, this)">أسود مطفي</button>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchPanel('p-size', this)">المقاس</button>
+            <button class="tab-btn" onclick="switchPanel('p-drawers', this)">الأدراج</button>
+            <button class="tab-btn" onclick="switchPanel('p-style', this)">التشكيل والزخرفة</button>
+            <button class="tab-btn" onclick="switchPanel('p-wood', this)">لون الخشب</button>
+            <button class="tab-btn" onclick="switchPanel('p-hardware', this)">المقابض والملحقات</button>
+        </div>
+    </div>
+
+<script>
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f19);
+
+    const camera = new THREE.PerspectiveCamera(38, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(1.8, 1.4, 2.2);
+    camera.lookAt(0, 0.5, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    container.appendChild(renderer.domElement);
+
+    // --- الإضاءة ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    mainLight.position.set(3, 4, 3);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.4);
+    fillLight.position.set(-3, 2, -2);
+    scene.add(fillLight);
+
+    // --- الخامات ---
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8d5b4c, roughness: 0.5 });
+    const drawerMat = new THREE.MeshStandardMaterial({ color: 0x8d5b4c, roughness: 0.5 });
+    const hardwareMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.2, metalness: 0.9 });
+
+    let mainGroup = new THREE.Group();
+    scene.add(mainGroup);
+
+    let drawerCount = 3;
+    let drawerStyle = 'flat';
+    let handleType = 'bar';
+    let dims = { width: 90, height: 81 };
+
+    function createRoundedBox(w, h, d, radius) {
+        const shape = new THREE.Shape();
+        const eps = 0.00001;
+        const width = w - radius * 2;
+        const height = h - radius * 2;
+
+        shape.absarc(eps, eps, radius, -Math.PI / 2, -Math.PI, true);
+        shape.absarc(eps, height, radius, Math.PI, Math.PI / 2, true);
+        shape.absarc(width, height, radius, Math.PI / 2, 0, true);
+        shape.absarc(width, eps, radius, 0, -Math.PI / 2, true);
+
+        const extrudeSettings = {
+            depth: d - radius * 2,
+            bevelEnabled: true,
+            bevelSegments: 3,
+            steps: 1,
+            bevelSize: radius,
+            bevelThickness: radius
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        geometry.center();
+        return geometry;
+    }
+
+    function buildDrawerFront(w, h, d) {
+        const group = new THREE.Group();
+
+        if (drawerStyle === 'framed') {
+            // إطار كلاسيك بارز
+            const outerGeo = createRoundedBox(w, h, d, 0.015);
+            const outerMesh = new THREE.Mesh(outerGeo, drawerMat);
+            group.add(outerMesh);
+
+            const innerGeo = createRoundedBox(w - 0.08, h - 0.06, d + 0.01, 0.01);
+            const innerMesh = new THREE.Mesh(innerGeo, drawerMat);
+            innerMesh.position.z = 0.005;
+            group.add(innerMesh);
+
+        } else if (drawerStyle === 'slatted') {
+            // شرائح خشبية
+            const baseGeo = createRoundedBox(w, h, d, 0.015);
+            group.add(new THREE.Mesh(baseGeo, drawerMat));
+
+            const slatCount = 6;
+            const slatH = (h - 0.04) / slatCount;
+            for (let i = 0; i < slatCount; i++) {
+                const slatGeo = createRoundedBox(w - 0.04, slatH - 0.01, 0.008, 0.003);
+                const slatMesh = new THREE.Mesh(slatGeo, drawerMat);
+                slatMesh.position.set(0, -h / 2 + 0.03 + i * slatH, d / 2 + 0.004);
+                group.add(slatMesh);
+            }
+
+        } else {
+            // مودرن مسطح
+            const frontGeo = createRoundedBox(w, h, d, 0.015);
+            group.add(new THREE.Mesh(frontGeo, drawerMat));
+        }
+
+        // إدراج المقابض
+        if (handleType === 'bar') {
+            const barGeo = new THREE.CylinderGeometry(0.008, 0.008, w * 0.4, 12);
+            const bar = new THREE.Mesh(barGeo, hardwareMat);
+            bar.rotation.z = Math.PI / 2;
+            bar.position.set(0, 0, d / 2 + 0.02);
+            group.add(bar);
+
+            [-w * 0.15, w * 0.15].forEach(x => {
+                const postGeo = new THREE.CylinderGeometry(0.006, 0.006, 0.02, 12);
+                const post = new THREE.Mesh(postGeo, hardwareMat);
+                post.rotation.x = Math.PI / 2;
+                post.position.set(x, 0, d / 2 + 0.01);
+                group.add(post);
+            });
+
+        } else if (handleType === 'knob') {
+            const knobGeo = new THREE.SphereGeometry(0.018, 16, 16);
+            knobGeo.scale(1, 1, 0.6);
+            const knob = new THREE.Mesh(knobGeo, hardwareMat);
+            knob.position.set(0, 0, d / 2 + 0.018);
+            group.add(knob);
+        }
+
+        return group;
+    }
+
+    function buildCabinet() {
+        while (mainGroup.children.length > 0) {
+            mainGroup.remove(mainGroup.children[0]);
+        }
+
+        const width = dims.width / 100;
+        const depth = 0.5;
+        const cabinetHeight = dims.height / 100;
+        const wallThick = 0.03;
+
+        // الهيكل الخارجي
+        const outerGeo = createRoundedBox(width, cabinetHeight, depth, 0.02);
+        const outerMesh = new THREE.Mesh(outerGeo, bodyMat);
+        outerMesh.position.set(0, cabinetHeight / 2 + 0.1, 0);
+        mainGroup.add(outerMesh);
+
+        // بناء الأدراج
+        const drawerW = width - wallThick * 2 - 0.02;
+        const drawerGap = 0.015;
+        const drawerH = (cabinetHeight - wallThick * 2 - drawerGap * (drawerCount - 1)) / drawerCount;
+        const startY = 0.1 + wallThick + drawerH / 2;
+
+        for (let i = 0; i < drawerCount; i++) {
+            const front = buildDrawerFront(drawerW, drawerH, 0.03);
+            front.position.set(0, startY + i * (drawerH + drawerGap), depth / 2 + 0.005);
+            mainGroup.add(front);
+        }
+
+        // الأرجل الاربعة
+        const legGeo = new THREE.CylinderGeometry(0.02, 0.012, 0.1, 16);
+        const legX = width / 2 - 0.06;
+        const legZ = depth / 2 - 0.06;
+
+        [[-legX, 0.05, legZ], [legX, 0.05, legZ], [-legX, 0.05, -legZ], [legX, 0.05, -legZ]].forEach(p => {
+            const leg = new THREE.Mesh(legGeo, hardwareMat);
+            leg.position.set(p[0], p[1], p[2]);
+            mainGroup.add(leg);
+        });
+
+        // تحريك الكاميرا لتناسب الارتفاع
+        camera.position.y = cabinetHeight * 0.6 + 0.4;
+        camera.lookAt(0, cabinetHeight / 2, 0);
+    }
+
+    // --- CONTROLS ---
+    function setDrawerCount(count, btn) {
+        drawerCount = count;
+        setActive(btn);
+        const defaultHeight = count * 22 + 15;
+        dims.height = defaultHeight;
+        document.getElementById('inp-height').value = defaultHeight;
+        document.getElementById('txt-height').textContent = defaultHeight + ' سم';
+        buildCabinet();
+        updatePrice();
+    }
+
+    function updateDimensions() {
+        dims.width = parseInt(document.getElementById('inp-width').value);
+        dims.height = parseInt(document.getElementById('inp-height').value);
+        document.getElementById('txt-width').textContent = dims.width + ' سم';
+        document.getElementById('txt-height').textContent = dims.height + ' سم';
+        updatePrice();
+        buildCabinet();
+    }
+
+    function updatePrice() {
+        const base = drawerCount * 60 + 100;
+        const sizeAdj = Math.round((dims.width - 90) * 0.7 + (dims.height - 81) * 0.6);
+        document.getElementById('price-tag').textContent = '$' + (base + sizeAdj);
+    }
+
+    function setDrawerStyle(style, btn) {
+        drawerStyle = style;
+        setActive(btn);
+        buildCabinet();
+    }
+
+    function setWoodColor(hex, roughness, btn) {
+        bodyMat.color.setHex(hex);
+        bodyMat.roughness = roughness;
+        drawerMat.color.setHex(hex);
+        drawerMat.roughness = roughness;
+        setActive(btn);
+    }
+
+    function setHandleType(type, btn) {
+        handleType = type;
+        setActive(btn);
+        buildCabinet();
+    }
+
+    function setHardwareFinish(hex, roughness, metalness, btn) {
+        hardwareMat.color.setHex(hex);
+        hardwareMat.roughness = roughness;
+        hardwareMat.metalness = metalness;
+        setActive(btn);
+    }
+
+    function setActive(btn) {
+        btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function switchPanel(id, btn) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    buildCabinet();
+    animate();
+</script>
+</body>
+</html>

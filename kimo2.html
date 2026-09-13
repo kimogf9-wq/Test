@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سرير — DESIGN Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&family=Tajawal:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d0a;
+            --panel: rgba(16, 20, 15, 0.92);
+            --accent: #12a37e;
+            --accent-dim: rgba(18, 163, 126, 0.16);
+            --border: rgba(230, 238, 230, 0.12);
+            --text: #eef2ee;
+            --muted: #8b968a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1,h2,h3,.brand,.opt-btn,.tab-btn,.price,.val,.label{ font-family: 'Cairo', sans-serif; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            height: 56px;
+            padding: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.85);
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
+        }
+
+        .brand-wrap { display:flex; align-items:center; gap:12px; }
+        .back-link { color: var(--muted); text-decoration:none; font-size:13px; display:flex; align-items:center; gap:6px; }
+        .back-link svg{ width:14px; height:14px; }
+        .brand { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing:.02em; }
+        .code-tag { font-size:11px; color: var(--accent); font-weight:700; letter-spacing:.05em; display:block; margin-top:1px; }
+        .price { background: var(--accent-dim); padding: 4px 12px; border-radius: 16px; color: var(--accent); font-weight: 700; border: 1px solid rgba(18, 163, 126, 0.35); }
+
+        #canvas-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+        }
+
+        .controls-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: none;
+            width: 94%;
+            max-width: 550px;
+            backdrop-filter: blur(12px);
+        }
+
+        .panel.active { display: block; }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .row::-webkit-scrollbar { display: none; }
+
+        .opt-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .opt-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #06120d;
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+        .slider-group { display:flex; flex-direction:column; gap:16px; }
+        .slider-item { display:flex; align-items:center; gap:12px; }
+        .slider-item .label { font-size:13px; color: var(--muted); min-width:90px; font-weight:600; }
+        .slider-item .val { font-size:13px; color: var(--accent); font-weight:700; min-width:56px; text-align:left; }
+        input[type="range"]{ flex:1; height:4px; border-radius:2px; background:var(--border); outline:none; accent-color: var(--accent); -webkit-appearance:none; }
+        input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; box-shadow:0 0 0 3px rgba(18,163,126,.2); }
+
+        .nav-tabs {
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid var(--border);
+            width: 100%;
+            display: flex;
+            padding: 6px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 80px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            padding: 10px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active { color: var(--accent); background: rgba(255, 255, 255, 0.06); border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="brand-wrap">
+            <a href="index.html" class="back-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+                الكتالوج
+            </a>
+            <div>
+                <div class="brand">سرير</div>
+                <span class="code-tag">BD—01</span>
+            </div>
+        </div>
+        <div class="price" id="price-tag">$450</div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="controls-area">
+        <!-- 1. المقاسات -->
+        <div class="panel active" id="p-size">
+            <div class="row" style="margin-bottom:14px;">
+                <button class="opt-btn active" onclick="setSize('single', this)">سرير مفرد (Single)</button>
+                <button class="opt-btn" onclick="setSize('double', this)">سرير مزدوج (Double)</button>
+                <button class="opt-btn" onclick="setSize('king', this)">سرير كينج (King Size)</button>
+            </div>
+            <div class="slider-group">
+                <div class="slider-item">
+                    <span class="label">العرض</span>
+                    <input type="range" id="inp-width" min="90" max="220" step="5" value="100" oninput="updateDimensions()">
+                    <span class="val" id="txt-width">100 سم</span>
+                </div>
+                <div class="slider-item">
+                    <span class="label">ارتفاع اللوح</span>
+                    <input type="range" id="inp-height" min="70" max="130" step="1" value="95" oninput="updateDimensions()">
+                    <span class="val" id="txt-height">95 سم</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. تشكيلات وزخارف اللوح -->
+        <div class="panel" id="p-style">
+            <div class="row">
+                <button class="opt-btn active" onclick="setHeadboardStyle('tufted', this)">كابيتونيه ملكي</button>
+                <button class="opt-btn" onclick="setHeadboardStyle('vertical', this)">خطوط مودرن طولية</button>
+                <button class="opt-btn" onclick="setHeadboardStyle('geometric', this)">مضلعات هندسية</button>
+                <button class="opt-btn" onclick="setHeadboardStyle('curved', this)">لوح منحني</button>
+                <button class="opt-btn" onclick="setHeadboardStyle('framed', this)">إطار خشبي كلاسيك</button>
+            </div>
+        </div>
+
+        <!-- 3. الألوان الممتدة والخامات -->
+        <div class="panel" id="p-fabric">
+            <div class="row" style="margin-bottom: 8px;">
+                <button class="opt-btn active" onclick="setFabricType('velvet', this)">مخمل (Velvet)</button>
+                <button class="opt-btn" onclick="setFabricType('leather', this)">جلد (Leather)</button>
+                <button class="opt-btn" onclick="setFabricType('linen', this)">كتان (Linen)</button>
+                <button class="opt-btn" onclick="setFabricType('wool', this)">صوف (Wool)</button>
+            </div>
+            <div class="row">
+                <button class="opt-btn active" onclick="setFabricColor(0x2dd4bf, this)"><span class="dot" style="background:#2dd4bf"></span> تركواز</button>
+                <button class="opt-btn" onclick="setFabricColor(0x475569, this)"><span class="dot" style="background:#475569"></span> رمادي</button>
+                <button class="opt-btn" onclick="setFabricColor(0x1e3a8a, this)"><span class="dot" style="background:#1e3a8a"></span> أزرق ملكي</button>
+                <button class="opt-btn" onclick="setFabricColor(0xd97706, this)"><span class="dot" style="background:#d97706"></span> خردلي</button>
+                <button class="opt-btn" onclick="setFabricColor(0x065f46, this)"><span class="dot" style="background:#065f46"></span> زمردي</button>
+                <button class="opt-btn" onclick="setFabricColor(0xbe123c, this)"><span class="dot" style="background:#be123c"></span> كشمير</button>
+                <button class="opt-btn" onclick="setFabricColor(0xd4b996, this)"><span class="dot" style="background:#d4b996"></span> بيج</button>
+                <button class="opt-btn" onclick="setFabricColor(0x18181b, this)"><span class="dot" style="background:#18181b"></span> أسود ملكي</button>
+            </div>
+        </div>
+
+        <!-- 4. خامات الأرجل -->
+        <div class="panel" id="p-legs">
+            <div class="row">
+                <button class="opt-btn active" onclick="setLegs(0xb45309, 0.6, 0, this)">خشب طبيعي</button>
+                <button class="opt-btn" onclick="setLegs(0x1e293b, 0.7, 0, this)">أسود مودرن</button>
+                <button class="opt-btn" onclick="setLegs(0xf59e0b, 0.2, 0.9, this)">معدن ذهبي</button>
+                <button class="opt-btn" onclick="setLegs(0xe2e8f0, 0.1, 0.95, this)">كروم فضي</button>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchPanel('p-size', this)">المقاس</button>
+            <button class="tab-btn" onclick="switchPanel('p-style', this)">التشكيلات والتطريز</button>
+            <button class="tab-btn" onclick="switchPanel('p-fabric', this)">الألوان والخامات</button>
+            <button class="tab-btn" onclick="switchPanel('p-legs', this)">الأرجل</button>
+        </div>
+    </div>
+
+<script>
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f19);
+
+    // كاميرا ثابته بزاوية إيزومترية فاخرة
+    const camera = new THREE.PerspectiveCamera(38, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(2.4, 1.7, 2.8);
+    camera.lookAt(0, 0.35, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    container.appendChild(renderer.domElement);
+
+    // --- الإضاءة ---
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.25);
+    mainLight.position.set(4, 5, 3.5);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.45);
+    fillLight.position.set(-3, 2, -2);
+    scene.add(fillLight);
+
+    // --- الخامات ---
+    const fabricMat = new THREE.MeshStandardMaterial({ color: 0x2dd4bf, roughness: 0.75 });
+    const buttonMat = new THREE.MeshStandardMaterial({ color: 0x1d9a8b, roughness: 0.5 });
+    const sheetMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 });
+    const woodFrameMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.4 });
+    const legMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.5 });
+
+    let mainGroup = new THREE.Group();
+    scene.add(mainGroup);
+
+    let currentSize = 'single';
+    let currentStyle = 'tufted';
+    let dims = { width: 100, height: 95 };
+
+    function createRoundedBox(w, h, d, radius) {
+        const shape = new THREE.Shape();
+        const eps = 0.00001;
+        const width = w - radius * 2;
+        const height = h - radius * 2;
+
+        shape.absarc(eps, eps, radius, -Math.PI / 2, -Math.PI, true);
+        shape.absarc(eps, height, radius, Math.PI, Math.PI / 2, true);
+        shape.absarc(width, height, radius, Math.PI / 2, 0, true);
+        shape.absarc(width, eps, radius, 0, -Math.PI / 2, true);
+
+        const extrudeSettings = {
+            depth: d - radius * 2,
+            bevelEnabled: true,
+            bevelSegments: 3,
+            steps: 1,
+            bevelSize: radius,
+            bevelThickness: radius
+        };
+
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        geometry.center();
+        return geometry;
+    }
+
+    // بناء اللوح الخلفي بحسب الزخرفة المحددة
+    function buildHeadboard(width, depth) {
+        const hbHeight = dims.height / 100;
+        const hbThick = 0.12;
+
+        const group = new THREE.Group();
+
+        if (currentStyle === 'framed') {
+            // إطار خشبي خارجي
+            const outerGeo = createRoundedBox(width + 0.08, hbHeight + 0.08, hbThick, 0.03);
+            const outerMesh = new THREE.Mesh(outerGeo, woodFrameMat);
+            outerMesh.position.set(0, hbHeight / 2 + 0.1, -depth / 2 - hbThick / 2);
+            group.add(outerMesh);
+
+            const innerGeo = createRoundedBox(width, hbHeight, hbThick + 0.02, 0.02);
+            const innerMesh = new THREE.Mesh(innerGeo, fabricMat);
+            innerMesh.position.set(0, hbHeight / 2 + 0.1, -depth / 2 - hbThick / 2);
+            group.add(innerMesh);
+
+        } else if (currentStyle === 'vertical') {
+            // خطوط مودرن طولية
+            const panelsCount = Math.floor(width * 6);
+            const panelWidth = (width - 0.02) / panelsCount;
+
+            for (let i = 0; i < panelsCount; i++) {
+                const pGeo = createRoundedBox(panelWidth - 0.015, hbHeight, hbThick, 0.02);
+                const pMesh = new THREE.Mesh(pGeo, fabricMat);
+                const xPos = -width / 2 + panelWidth / 2 + i * panelWidth;
+                pMesh.position.set(xPos, hbHeight / 2 + 0.1, -depth / 2 - hbThick / 2);
+                group.add(pMesh);
+            }
+
+        } else if (currentStyle === 'geometric') {
+            // مربعات مضلعة هندسية
+            const rows = 3;
+            const cols = Math.floor(width * 4);
+            const boxW = width / cols;
+            const boxH = hbHeight / rows;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const gGeo = createRoundedBox(boxW - 0.015, boxH - 0.015, hbThick, 0.02);
+                    const gMesh = new THREE.Mesh(gGeo, fabricMat);
+                    const xPos = -width / 2 + boxW / 2 + c * boxW;
+                    const yPos = 0.1 + boxH / 2 + r * boxH;
+                    gMesh.position.set(xPos, yPos, -depth / 2 - hbThick / 2);
+                    group.add(gMesh);
+                }
+            }
+
+        } else if (currentStyle === 'curved') {
+            // لوح منحني دائري
+            const hbGeo = createRoundedBox(width, hbHeight, hbThick, 0.08);
+            const hbMesh = new THREE.Mesh(hbGeo, fabricMat);
+            hbMesh.position.set(0, hbHeight / 2 + 0.1, -depth / 2 - hbThick / 2);
+            group.add(hbMesh);
+
+        } else {
+            // كابيتونيه ملكي (Tufted - افتراضي)
+            const hbGeo = createRoundedBox(width, hbHeight, hbThick, 0.03);
+            const hbMesh = new THREE.Mesh(hbGeo, fabricMat);
+            hbMesh.position.set(0, hbHeight / 2 + 0.1, -depth / 2 - hbThick / 2);
+            group.add(hbMesh);
+
+            // إضافة زراير كابيتونيه
+            const cols = Math.floor(width * 5);
+            const buttonGeo = new THREE.SphereGeometry(0.018, 12, 12);
+            buttonGeo.scale(1, 1, 0.5);
+
+            const startX = -width / 2 + 0.12;
+            const stepX = (width - 0.24) / (cols - 1 || 1);
+            const startY = 0.28;
+            const stepY = 0.18;
+
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const btn = new THREE.Mesh(buttonGeo, buttonMat);
+                    const offsetX = (r % 2 === 1) ? stepX / 2 : 0;
+                    btn.position.set(startX + c * stepX + offsetX, startY + r * stepY, -depth / 2 + 0.01);
+                    group.add(btn);
+                }
+            }
+        }
+
+        return group;
+    }
+
+    function buildBed() {
+        while (mainGroup.children.length > 0) {
+            mainGroup.remove(mainGroup.children[0]);
+        }
+
+        const width = dims.width / 100;
+        const depth = 1.6;
+
+        // 1. قاعدة السرير السفلي (Base)
+        const baseGeo = createRoundedBox(width, 0.22, depth, 0.03);
+        const baseMesh = new THREE.Mesh(baseGeo, fabricMat);
+        baseMesh.position.set(0, 0.18, 0);
+        mainGroup.add(baseMesh);
+
+        // 2. المرتبة (Mattress)
+        const matGeo = createRoundedBox(width - 0.06, 0.2, depth - 0.06, 0.04);
+        const mattress = new THREE.Mesh(matGeo, sheetMat);
+        mattress.position.set(0, 0.38, 0);
+        mainGroup.add(mattress);
+
+        // 3. الغطاء السريري (Blanket)
+        const blanketGeo = createRoundedBox(width - 0.04, 0.12, depth * 0.65, 0.03);
+        const blanket = new THREE.Mesh(blanketGeo, fabricMat);
+        blanket.position.set(0, 0.43, depth * 0.16);
+        mainGroup.add(blanket);
+
+        // 4. الوسائد (Pillows)
+        const pillowCount = currentSize === 'single' ? 2 : 4;
+        const pillowW = (width - 0.2) / (pillowCount > 2 ? 2 : pillowCount);
+        const pillowGeo = createRoundedBox(pillowW, 0.1, 0.32, 0.03);
+
+        if (pillowCount === 2) {
+            for (let i = 0; i < 2; i++) {
+                const pillow = new THREE.Mesh(pillowGeo, sheetMat);
+                pillow.position.set(-width / 4 + i * (width / 2), 0.5, -depth / 2 + 0.28);
+                pillow.rotation.x = 0.15;
+                mainGroup.add(pillow);
+            }
+        } else {
+            for (let row = 0; row < 2; row++) {
+                for (let i = 0; i < 2; i++) {
+                    const pillow = new THREE.Mesh(pillowGeo, sheetMat);
+                    pillow.position.set(-width / 4 + i * (width / 2), 0.5 + row * 0.05, -depth / 2 + 0.22 + row * 0.18);
+                    pillow.rotation.x = 0.2;
+                    mainGroup.add(pillow);
+                }
+            }
+        }
+
+        // 5. اللوح الخلفي (Headboard)
+        mainGroup.add(buildHeadboard(width, depth));
+
+        // 6. الأرجل الأربعة
+        const legGeo = new THREE.CylinderGeometry(0.028, 0.018, 0.14, 16);
+        const legX = width / 2 - 0.08;
+        const legZ = depth / 2 - 0.08;
+
+        [[-legX, 0.07, legZ], [legX, 0.07, legZ], [-legX, 0.07, -legZ], [legX, 0.07, -legZ]].forEach(p => {
+            const leg = new THREE.Mesh(legGeo, legMat);
+            leg.position.set(p[0], p[1], p[2]);
+            mainGroup.add(leg);
+        });
+    }
+
+    // --- CONTROLS ---
+    function setSize(type, btn) {
+        currentSize = type;
+        setActive(btn);
+        const defaultWidth = type === 'single' ? 100 : type === 'double' ? 150 : 200;
+        dims.width = defaultWidth;
+        document.getElementById('inp-width').value = defaultWidth;
+        document.getElementById('txt-width').textContent = defaultWidth + ' سم';
+        buildBed();
+        updatePrice();
+    }
+
+    function updateDimensions() {
+        dims.width = parseInt(document.getElementById('inp-width').value);
+        dims.height = parseInt(document.getElementById('inp-height').value);
+        document.getElementById('txt-width').textContent = dims.width + ' سم';
+        document.getElementById('txt-height').textContent = dims.height + ' سم';
+        updatePrice();
+        buildBed();
+    }
+
+    function updatePrice() {
+        const base = currentSize === 'single' ? 450 : currentSize === 'double' ? 620 : 810;
+        const sizeAdj = Math.round((dims.width - 100) * 1.2 + (dims.height - 95) * 0.9);
+        document.getElementById('price-tag').textContent = '$' + (base + sizeAdj);
+    }
+
+    function setHeadboardStyle(style, btn) {
+        currentStyle = style;
+        setActive(btn);
+        buildBed();
+    }
+
+    function setFabricType(type, btn) {
+        setActive(btn);
+        if (type === 'velvet') { fabricMat.roughness = 0.85; fabricMat.metalness = 0.1; }
+        else if (type === 'leather') { fabricMat.roughness = 0.25; fabricMat.metalness = 0.2; }
+        else if (type === 'linen') { fabricMat.roughness = 0.95; fabricMat.metalness = 0.0; }
+        else if (type === 'wool') { fabricMat.roughness = 0.75; fabricMat.metalness = 0.0; }
+    }
+
+    function setFabricColor(hex, btn) {
+        if(btn) setActive(btn);
+        fabricMat.color.setHex(hex);
+        const c = new THREE.Color(hex);
+        c.multiplyScalar(0.7);
+        buttonMat.color.copy(c);
+    }
+
+    function setLegs(hex, roughness, metalness, btn) {
+        legMat.color.setHex(hex);
+        legMat.roughness = roughness;
+        legMat.metalness = metalness;
+        setActive(btn);
+    }
+
+    function setActive(btn) {
+        btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function switchPanel(id, btn) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    buildBed();
+    animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>دولاب — DESIGN Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;900&family=Tajawal:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d0a;
+            --panel-bg: rgba(16, 20, 15, 0.95);
+            --accent: #12a37e;
+            --accent-hover: #0d8366;
+            --border: rgba(230, 238, 230, 0.12);
+            --text: #eef2ee;
+            --muted: #8b968a;
+            --card-bg: rgba(255, 255, 255, 0.03);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        h1,h2,h3,.brand-title,.btn-opt,.nav-btn,.price-badge,.val,.label,.section-header{ font-family: 'Cairo', sans-serif; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            height: 60px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
+        }
+
+        .brand-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #12a37e;
+            letter-spacing: -0.5px;
+        }
+
+        .price-badge {
+            background: rgba(18, 163, 126, 0.15);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 16px;
+            color: #12a37e;
+            border: 1px solid rgba(18, 163, 126, 0.3);
+        }
+
+        .btn-door-toggle {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(18, 163, 126, 0.3);
+        }
+
+        .btn-door-toggle:active {
+            transform: scale(0.96);
+        }
+
+        .viewport {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            filter: drop-shadow(0 20px 35px rgba(0,0,0,0.6));
+        }
+
+        .bottom-controls-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .settings-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 8px;
+            display: none;
+            width: 94%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            backdrop-filter: blur(12px);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .scroll-options-row {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 2px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .scroll-options-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .btn-opt {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .btn-opt.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(18, 163, 126, 0.4);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .slider-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-item span.label {
+            font-weight: 600;
+            font-size: 13px;
+            min-width: 90px;
+            color: var(--muted);
+        }
+
+        .slider-item span.val {
+            font-weight: 700;
+            font-size: 13px;
+            min-width: 55px;
+            text-align: left;
+            color: #12a37e;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            accent-color: var(--accent);
+        }
+
+        .shelf-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 220px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .shelf-control-group::-webkit-scrollbar {
+            width: 4px;
+        }
+        .shelf-control-group::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .section-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: #12a37e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .counter-btn-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,0,0,0.2);
+            padding: 2px 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .btn-counter {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .select-pos {
+            background: #0d120d;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            outline: none;
+        }
+
+        .toggle-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .toggle-btn.active {
+            background: #12a37e;
+            border-color: #12a37e;
+            color: white;
+        }
+
+        .bottom-nav {
+            background: rgba(11, 15, 25, 0.95);
+            border-top: 1px solid var(--border);
+            width: 100%;
+            padding: 10px 6px;
+            display: flex;
+            justify-content: space-between;
+            overflow-x: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--muted);
+            cursor: pointer;
+            white-space: nowrap;
+            flex: 1;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <a href="index.html" style="color: var(--muted); text-decoration:none; font-size:13px; display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+                الكتالوج
+            </a>
+            <div>
+                <div class="brand-title">دولاب</div>
+                <span style="font-size:11px; color: var(--accent); font-weight:700; letter-spacing:.05em; display:block; margin-top:1px;">WD—01</span>
+            </div>
+        </div>
+        <div class="price-badge" id="price-display">$0</div>
+        <button class="btn-door-toggle" onclick="toggleDoors(event)">معاينة الأبواب</button>
+    </div>
+
+    <div class="viewport" id="viewport">
+        <canvas id="wardrobeCanvas"></canvas>
+    </div>
+
+    <div class="bottom-controls-container" id="controls-container">
+        
+        <div class="settings-panel active" id="panel-shelves">
+            <div class="shelf-control-group" id="shelf-controls-container"></div>
+        </div>
+
+        <div class="settings-panel" id="panel-dimensions">
+            <div class="slider-group">
+                <div class="slider-item">
+                    <span class="label">العرض أفقياً:</span>
+                    <input type="range" id="inp-width" min="120" max="350" value="230" step="5" oninput="updateDimensions()">
+                    <span class="val" id="txt-width">230 سم</span>
+                </div>
+                <div class="slider-item">
+                    <span class="label">الارتفاع رأسيًا:</span>
+                    <input type="range" id="inp-height" min="160" max="300" value="220" step="5" oninput="updateDimensions()">
+                    <span class="val" id="txt-height">220 سم</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-panel" id="panel-doors">
+            <div class="scroll-options-row">
+                <button class="btn-opt" onclick="setDoors(2, this, event)">2 أبواب</button>
+                <button class="btn-opt active" onclick="setDoors(3, this, event)">3 أبواب</button>
+                <button class="btn-opt" onclick="setDoors(4, this, event)">4 أبواب</button>
+                <button class="btn-opt" onclick="setDoors(5, this, event)">5 أبواب</button>
+            </div>
+        </div>
+
+        <div class="settings-panel" id="panel-style">
+            <div class="scroll-options-row">
+                <button class="btn-opt active" onclick="setDoorStyle('slat', this, event)">شرائح مودرن</button>
+                <button class="btn-opt" onclick="setDoorStyle('shaker', this, event)">إطار كلاسيك</button>
+                <button class="btn-opt" onclick="setDoorStyle('glass', this, event)">إطار زجاجي</button>
+                <button class="btn-opt" onclick="setDoorStyle('flat', this, event)">سادة</button>
+            </div>
+        </div>
+
+        <div class="settings-panel" id="panel-handles">
+            <div class="scroll-options-row">
+                <button class="btn-opt active" onclick="setHandle('modern', this, event)">ستانلس طويل</button>
+                <button class="btn-opt" onclick="setHandle('knob', this, event)">مقبض دائري</button>
+                <button class="btn-opt" onclick="setHandle('recessed', this, event)">مقبض مخفي</button>
+            </div>
+        </div>
+
+        <div class="settings-panel" id="panel-materials">
+            <div class="scroll-options-row">
+                <button class="btn-opt active" onclick="setMaterial('oak', this, event)">
+                    <div class="color-dot" style="background:#b58351;"></div> بلوط
+                </button>
+                <button class="btn-opt" onclick="setMaterial('walnut', this, event)">
+                    <div class="color-dot" style="background:#4a2f1b;"></div> جوز
+                </button>
+                <button class="btn-opt" onclick="setMaterial('white', this, event)">
+                    <div class="color-dot" style="background:#e2e8f0;"></div> أبيض
+                </button>
+                <button class="btn-opt" onclick="setMaterial('grey', this, event)">
+                    <div class="color-dot" style="background:#334155;"></div> رمادي
+                </button>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn active" onclick="openPanel('panel-shelves', this, event)">التقسيم الشمعات</button>
+            <button class="nav-btn" onclick="openPanel('panel-dimensions', this, event)">المقاسات</button>
+            <button class="nav-btn" onclick="openPanel('panel-doors', this, event)">الأبواب</button>
+            <button class="nav-btn" onclick="openPanel('panel-style', this, event)">التصميم</button>
+            <button class="nav-btn" onclick="openPanel('panel-handles', this, event)">المقابض</button>
+            <button class="nav-btn" onclick="openPanel('panel-materials', this, event)">الخامات</button>
+        </div>
+
+    </div>
+
+<script>
+    const canvas = document.getElementById('wardrobeCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = document.getElementById('viewport');
+
+    let cssWidth = 300;
+    let cssHeight = 300;
+
+    const state = {
+        width: 230,
+        height: 220,
+        doors: 3,
+        doorStyle: 'slat',
+        handleStyle: 'modern',
+        material: 'oak',
+        isOpen: true,
+        sections: [
+            { shelves: 0, hooksCount: 6, hookPos: 'top', rod: false },
+            { shelves: 5, hooksCount: 0, hookPos: 'top', rod: false },
+            { shelves: 1, hooksCount: 0, hookPos: 'top', rod: true }
+        ]
+    };
+
+    const materials = {
+        oak: { main: '#b58351', dark: '#784d22', light: '#d4a373', inner: '#e6d2b5' },
+        walnut: { main: '#4a2f1b', dark: '#28170c', light: '#6b472b', inner: '#7a5a41' },
+        white: { main: '#e2e8f0', dark: '#cbd5e1', light: '#ffffff', inner: '#f1f5f9' },
+        grey: { main: '#334155', dark: '#1e293b', light: '#475569', inner: '#64748b' }
+    };
+
+    function openPanel(panelId, btn, e) {
+        if (e) e.stopPropagation();
+        document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(panelId).classList.add('active');
+        btn.classList.add('active');
+        setTimeout(resizeCanvas, 30);
+    }
+
+    function updateShelfUI() {
+        const container = document.getElementById('shelf-controls-container');
+        container.innerHTML = '';
+
+        for (let i = 0; i < state.doors; i++) {
+            if (!state.sections[i]) {
+                state.sections[i] = { shelves: 2, hooksCount: 0, hookPos: 'top', rod: false };
+            }
+
+            const sec = state.sections[i];
+            const card = document.createElement('div');
+            card.className = 'section-card';
+            card.innerHTML = `
+                <div class="section-header">
+                    <span>القسم ${i + 1}</span>
+                    <button class="toggle-btn ${sec.rod ? 'active' : ''}" onclick="toggleRod(${i}, event)">
+                        ${sec.rod ? '✓ قضيب تعليق' : '+ قضيب تعليق'}
+                    </button>
+                </div>
+                
+                <div class="control-row">
+                    <span>عدد الرفوف:</span>
+                    <div class="counter-btn-wrapper">
+                        <button class="btn-counter" onclick="changeShelves(${i}, -1, event)">-</button>
+                        <span style="font-weight:bold; min-width:18px; text-align:center;">${sec.shelves}</span>
+                        <button class="btn-counter" onclick="changeShelves(${i}, 1, event)">+</button>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <span>عدد الشمعات/الخطافات:</span>
+                    <div class="counter-btn-wrapper">
+                        <button class="btn-counter" onclick="changeHooks(${i}, -1, event)">-</button>
+                        <span style="font-weight:bold; min-width:18px; text-align:center;">${sec.hooksCount}</span>
+                        <button class="btn-counter" onclick="changeHooks(${i}, 1, event)">+</button>
+                    </div>
+                </div>
+
+                ${sec.hooksCount > 0 ? `
+                <div class="control-row">
+                    <span>موقع الشمعات:</span>
+                    <select class="select-pos" onchange="changeHookPos(${i}, this.value, event)">
+                        <option value="top" ${sec.hookPos === 'top' ? 'selected' : ''}>أعلى</option>
+                        <option value="center" ${sec.hookPos === 'center' ? 'selected' : ''}>منتصف</option>
+                        <option value="bottom" ${sec.hookPos === 'bottom' ? 'selected' : ''}>أسفل</option>
+                    </select>
+                </div>
+                ` : ''}
+            `;
+            container.appendChild(card);
+        }
+    }
+
+    function changeShelves(index, delta, e) {
+        if (e) e.stopPropagation();
+        state.sections[index].shelves = Math.max(0, Math.min(6, state.sections[index].shelves + delta));
+        updateShelfUI();
+        draw();
+    }
+
+    function changeHooks(index, delta, e) {
+        if (e) e.stopPropagation();
+        state.sections[index].hooksCount = Math.max(0, Math.min(8, state.sections[index].hooksCount + delta));
+        updateShelfUI();
+        draw();
+    }
+
+    function changeHookPos(index, pos, e) {
+        if (e) e.stopPropagation();
+        state.sections[index].hookPos = pos;
+        draw();
+    }
+
+    function toggleRod(index, e) {
+        if (e) e.stopPropagation();
+        state.sections[index].rod = !state.sections[index].rod;
+        updateShelfUI();
+        draw();
+    }
+
+    function updateDimensions() {
+        state.width = parseInt(document.getElementById('inp-width').value);
+        state.height = parseInt(document.getElementById('inp-height').value);
+        document.getElementById('txt-width').textContent = state.width + ' سم';
+        document.getElementById('txt-height').textContent = state.height + ' سم';
+        calculatePrice();
+        draw();
+    }
+
+    function setDoors(count, btn, e) {
+        if (e) e.stopPropagation();
+        state.doors = count;
+        while (state.sections.length < count) state.sections.push({ shelves: 2, hooksCount: 0, hookPos: 'top', rod: false });
+        if (state.sections.length > count) state.sections.length = count;
+        
+        setActive(btn);
+        updateShelfUI();
+        calculatePrice();
+        draw();
+    }
+
+    function setDoorStyle(style, btn, e) {
+        if (e) e.stopPropagation();
+        state.doorStyle = style;
+        setActive(btn);
+        draw();
+    }
+
+    function setHandle(style, btn, e) {
+        if (e) e.stopPropagation();
+        state.handleStyle = style;
+        setActive(btn);
+        draw();
+    }
+
+    function setMaterial(matKey, btn, e) {
+        if (e) e.stopPropagation();
+        state.material = matKey;
+        setActive(btn);
+        calculatePrice();
+        draw();
+    }
+
+    function toggleDoors(e) {
+        if (e) e.stopPropagation();
+        state.isOpen = !state.isOpen;
+        draw();
+    }
+
+    function setActive(btn) {
+        btn.parentElement.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function calculatePrice() {
+        let price = (state.width * state.height * 0.02) + (state.doors * 70);
+        state.sections.forEach(sec => {
+            price += sec.hooksCount * 4;
+            price += sec.shelves * 10;
+            if (sec.rod) price += 15;
+        });
+        if (state.material === 'walnut') price += 150;
+        document.getElementById('price-display').textContent = '$' + Math.round(price);
+    }
+
+    function drawHooksRow(cx, topY, height, count, pos) {
+        if (count <= 0) return;
+
+        let hooksY = topY + 30;
+
+        if (pos === 'center') {
+            hooksY = topY + (height / 2);
+        } else if (pos === 'bottom') {
+            hooksY = topY + height - 30;
+        }
+
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+
+        const xStep = cx.width / (count + 1);
+
+        for (let i = 1; i <= count; i++) {
+            const hx = cx.x + (i * xStep);
+            
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(hx, hooksY, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(hx - 4, hooksY - 4);
+            ctx.quadraticCurveTo(hx - 4, hooksY + 3, hx, hooksY + 3);
+            ctx.quadraticCurveTo(hx + 4, hooksY + 3, hx + 4, hooksY - 4);
+            ctx.stroke();
+        }
+    }
+
+    function drawHangingRod(cx, topY) {
+        const rodY = topY + 20;
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(cx.x + 3, rodY, cx.width - 6, 4);
+        
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(cx.x + 1, rodY - 2, 4, 8);
+        ctx.fillRect(cx.x + cx.width - 5, rodY - 2, 4, 8);
+    }
+
+    function drawDoorDesign(x, y, w, h, mat) {
+        if (state.doorStyle === 'shaker') {
+            const p = Math.min(w * 0.12, 12);
+            ctx.fillStyle = 'rgba(0,0,0,0.12)';
+            ctx.fillRect(x + p, y + p, w - (p * 2), h - (p * 2));
+            ctx.strokeStyle = mat.dark;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x + p, y + p, w - (p * 2), h - (p * 2));
+        } else if (state.doorStyle === 'slat') {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+            for (let i = 10; i < h - 10; i += 12) {
+                ctx.fillRect(x + 4, y + i, w - 8, 3);
+            }
+        } else if (state.doorStyle === 'glass') {
+            const p = Math.min(w * 0.12, 10);
+            ctx.fillStyle = 'rgba(186, 230, 253, 0.35)';
+            ctx.fillRect(x + p, y + p, w - (p * 2), h - (p * 2));
+            ctx.strokeStyle = '#93c5fd';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x + p, y + p, w - (p * 2), h - (p * 2));
+        }
+    }
+
+    function drawRealisticHandle(hx, hy, scale) {
+        ctx.save();
+        if (state.handleStyle === 'modern') {
+            let handleH = Math.max(16, scale * 18);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(hx, hy - (handleH / 2), 4, handleH);
+            ctx.strokeStyle = '#64748b';
+            ctx.strokeRect(hx, hy - (handleH / 2), 4, handleH);
+        } else if (state.handleStyle === 'knob') {
+            ctx.fillStyle = '#eab308';
+            ctx.beginPath();
+            ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#854d0e';
+            ctx.stroke();
+        } else if (state.handleStyle === 'recessed') {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillRect(hx - 2, hy - 12, 4, 24);
+        }
+        ctx.restore();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+        // الهوامش المضبوطة بالبكسل الحقيقي
+        const padX = 25;
+        const padY = 25;
+        const availableW = cssWidth - (padX * 2);
+        const availableH = cssHeight - (padY * 2);
+
+        // حساب المقياس الحقيقي المطابق لأبعاد الشاشة
+        const scaleX = availableW / state.width;
+        const scaleY = availableH / state.height;
+        const scale = Math.min(scaleX, scaleY);
+
+        const w = state.width * scale;
+        const h = state.height * scale;
+        
+        // التوسيط في نص المكان المتاح
+        const x = (cssWidth - w) / 2;
+        const y = (cssHeight - h) / 2;
+
+        const thick = Math.max(5, Math.round(6 * scale));
+        const mat = materials[state.material];
+
+        // الهيكل الخارجي
+        ctx.fillStyle = mat.main;
+        ctx.fillRect(x, y, w, h);
+
+        const ix = x + thick;
+        const iy = y + thick;
+        const iw = w - (thick * 2);
+        const ih = h - (thick * 2);
+
+        // الخلفية الداخلية
+        ctx.fillStyle = mat.inner;
+        ctx.fillRect(ix, iy, iw, ih);
+
+        const cols = state.doors;
+        const colW = iw / cols;
+
+        for (let i = 0; i < cols; i++) {
+            const cx = ix + (i * colW);
+            const sec = state.sections[i] || { shelves: 2, hooksCount: 0, hookPos: 'top', rod: false };
+
+            if (i > 0) {
+                ctx.fillStyle = mat.main;
+                ctx.fillRect(cx - (thick / 2), iy, thick, ih);
+            }
+
+            if (sec.rod) {
+                drawHangingRod({ x: cx, width: colW }, iy);
+            }
+
+            if (sec.hooksCount > 0) {
+                drawHooksRow({ x: cx, width: colW }, iy, ih, sec.hooksCount, sec.hookPos);
+            }
+
+            if (sec.shelves > 0) {
+                const step = ih / (sec.shelves + 1);
+                for (let j = 1; j <= sec.shelves; j++) {
+                    const sy = iy + (j * step);
+                    ctx.fillStyle = mat.main;
+                    ctx.fillRect(cx + 2, sy, colW - 4, thick);
+                }
+            }
+        }
+
+        if (!state.isOpen) {
+            for (let i = 0; i < cols; i++) {
+                const dx = ix + (i * colW);
+                ctx.fillStyle = mat.light;
+                ctx.fillRect(dx + 1, iy + 1, colW - 2, ih - 2);
+                ctx.strokeStyle = mat.dark;
+                ctx.lineWidth = 1;
+                ctx.strokeRect(dx + 1, iy + 1, colW - 2, ih - 2);
+
+                drawDoorDesign(dx + 1, iy + 1, colW - 2, ih - 2, mat);
+
+                const handleX = dx + colW - 8;
+                const handleY = iy + (ih / 2);
+                drawRealisticHandle(handleX, handleY, scale);
+            }
+        }
+    }
+
+    function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = viewport.getBoundingClientRect();
+        
+        cssWidth = rect.width;
+        cssHeight = rect.height;
+
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+
+        ctx.resetTransform();
+        ctx.scale(dpr, dpr);
+        draw();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    updateShelfUI();
+    resizeCanvas();
+    calculatePrice();
+</script>
+</body>
+</html>
